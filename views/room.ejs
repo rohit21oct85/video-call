@@ -1,0 +1,115 @@
+<script>
+    const ROOM_ID = "<%= roomId %>"
+</script>
+<style type="text/css">
+
+#video-grid{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    video{
+      height: 400px;
+      width: 300px;
+      object-fit: contain;
+    }
+    a{ color: white}
+    .chat-header{
+      width: 100%;
+      padding: 15px 10px !important;
+    }
+    .chat-content{
+      background-color:white;
+      height: 74vh;
+    }
+    .chat{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 0px;
+      background: #1f1e1e;
+    }
+    .chat input{
+        background: transparent;
+        flex-grow: 1;
+    }
+    .chat input:focus{
+        background: transparent;
+        flex-grow: 1;
+    }
+    .main__video{
+        background-color: black; 
+        height: 81vh; margin:0px
+    }
+    .main__controls{
+        display: flex;
+        background: #1f1e1e;
+        color: #fff;  
+       justify-content: space-between;
+    }
+    .main__controls__block{
+       display: flex;
+    }
+    .main__controls__button{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 15px;
+        cursor: pointer;
+        min-width: 100px;
+    }
+    .main__controls__button i {
+        font-size: 24px;
+    }
+    .main__controls__button:hover{
+        background: #343434;
+        color: #fff;
+        border-radius: 5px;;
+    }
+    .leave_meeting{
+        color: #f00;
+    }
+</style>
+<div class="row">
+    <div class="col-md-10 p-0">
+        <div class="main__video">
+            <div id="video-grid"></div>
+        </div>
+
+        <div class="main__controls">
+            <div class="main__controls__block">
+                <div class="main__controls__button"><i class="fa fa-microphone"></i> <span>Mute</span></div>
+                <div class="main__controls__button"><i class="fa fa-video-camera"></i> <span>Stop Video</span></div>
+            </div>
+            <div class="main__controls__block">
+                <div class="main__controls__button">
+                    <i class="fa fa-users"></i>
+                    <span>Particepants</span>
+                </div>
+                
+                <div class="main__controls__button">
+                    <i class="fa fa-comments"></i>
+                    <span>Chats</span>
+                </div>
+
+            </div>
+            <div class="main__controls__block">
+                <div class="main__controls__button leave_meeting">
+                    <i class="fa fa-trash"></i>
+                    <span>Leave Meetings</span>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <div class="col-md-2 p-0" >
+        <div class="chat-header">Chat </div>
+        <div class="chat-content">
+            <ul class="chat_messages"></ul>
+        </div>
+        <div class="chat">
+            <input type="text" id="chat_input" class="form-control" />
+        </div>
+    </div>
+</div>
+<script src="/script.js" defer></script>
