@@ -3,47 +3,63 @@ const videoGrid = document.getElementById('video-grid')
 const PORT = 3000;
 const myPeer = new Peer({host:'peerjs-server.herokuapp.com', secure:true, port:443})
 // const myPeer = new Peer({
+//     path:'/peerjs',
 //     host:'/',
 //     port: 3000
 // })
 const myVideo = document.createElement('video')
 myVideo.muted = true;
+myVideo.id = "myVideo";
 
 const peers = {}
+let tracks;
+let videoTracks;
 navigator.mediaDevices.getUserMedia({
     video: true,
     audio: true
 }).then( stream => {
+    tracks = stream.getAudioTracks();
+    videoTracks = stream.getVideoTracks();
     addVideoStream(myVideo, stream)
     
     myPeer.on('call', call => {
         call.answer(stream)
-        const video = document.createElement('video')
+        // const video = document.createElement('video')
         call.on('stream', userVideoStream => {
-            addVideoStream(video, userVideoStream)
+            addVideoStream(myVideo, userVideoStream)
         })
     })
 
     socket.on('user-connected', userId => {
         console.log("User Connected: " + userId)
-        connectToNewUser(userId, stream)
-        
+        connectToNewUser(userId, stream)        
     })
+
 
     socket.on('user-disconnected', userId => {
         if(peers[userId]) {
            peers[userId].close()
         }
      });
+     
+    $('html').keydown((e) => {
+        let text = e.target.value;
+        if(e.which === 13 && text.length !== 0){
+            socket.emit('message', text)
+            $("#chat_input").val('');
+        }
+    })
+
+    socket.on('createMessage', message => {
+        console.log('this is message from server ' + message)
+        $(".chat_messages").append(`<li class='message'>User: ${message}</li>`);
+    })
+    
 })
 
 myPeer.on('open', id => {
     socket.emit('join-room', ROOM_ID, id)
 })
-
-
-
-
 
 function addVideoStream(video, stream){
     video.srcObject = stream
@@ -54,28 +70,119 @@ function addVideoStream(video, stream){
 }
 
 function connectToNewUser(userId , stream){
- const call = myPeer.call(userId, stream)
- const video = document.createElement('video')
- call.on('stream', userVideoStream => {
-     addVideoStream(video, userVideoStream)
- })
- call.on('close', () => {
-    video.remove();
- })
- peers[userId] = call
+    const call = myPeer.call(userId, stream)
+    const video = document.createElement('video')
+    video.id = "userVideo";
+    call.on('stream', userVideoStream => {
+        addVideoStream(video, userVideoStream)
+    })
+    call.on('close', () => {
+        video.remove();
+    })
+    peers[userId] = call
 
 }
 
+const scrollToBottom = () => {
+    let d = $(".main__chat_window");
+    d.scrollBottom(d.prop("scrollHeight"));
+}
 
-$('html').keydown((e) => {
-    let text = e.target.value;
-    if(e.which === 13 && text.length !== 0){
-        socket.emit('message', text)
-        $("#chat_input").val('');
+const muteUnmute = () => {
+    const enabled = tracks[0].enabled;
+    if(enabled){
+        tracks[0].enabled = false;
+        setUnMuteButton();
+    }else{
+        setMuteButton();
+        tracks[0].enabled = true;
     }
-})
+}
 
-socket.on('createMessage', message => {
-    console.log('this is message from server ' + message)
-    $(".chat_messages").append(message);
-})
+const setMuteButton = () => {
+    const html = `
+        <i class="fa fa-microphone"></i>
+        <span>Mute</span>
+    `;
+    document.querySelector('.main_mute_button').innerHTML = html;
+}
+
+const setUnMuteButton = () => {
+    const html = `
+        <i class="unmute fa fa-microphone-slash"></i>
+        <span class="unmute">UnMute</span>
+    `;
+    document.querySelector('.main_mute_button').innerHTML = html;
+}
+
+const pausePlayVideo = () => {
+    const enabled = videoTracks[0].enabled;
+    if(enabled){
+        videoTracks[0].enabled = false;
+        setVideoPauseButton();
+    }else{
+        setVideoPlayButton();
+        videoTracks[0].enabled = true;
+    }   
+}
+
+
+const setVideoPauseButton = () => {
+    const html = `
+        <i class="fas fa-video-slash unmute"></i>
+        <span class="unmute">Play Video</span>
+    `;
+    document.querySelector('.main_video_button').innerHTML = html;
+}
+
+const setVideoPlayButton = () => {
+    const html = `
+        <i class="fas fa-video"></i>
+        <span>Stop Video</span>
+    `;
+    document.querySelector('.main_video_button').innerHTML = html;
+}
+
+const LeaveMeeting = () => {
+    window.location.href = '/host-meeting';
+}
+
+const gdmOptions = {
+    video: {
+      cursor: "always"
+    },
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      sampleRate: 44100
+    }
+  }
+const startElem = document.getElementById("startCapture");  
+const stopElem = document.getElementById("stopCapture");  
+startElem.addEventListener('click', () => {
+    $("#startCapture").css({ display: 'none'});
+    $("#stopCapture").css({ display: 'flex'});
+    startCatpture();
+}, false);
+
+stopElem.addEventListener('click', () => {
+    $("#startCapture").css({ display: 'flex'});
+    $("#stopCapture").css({ display: 'none'});
+    stopCatpture();
+}, false);
+
+const startCatpture = async () => {
+    try {
+        myVideo.srcObject = await navigator.mediaDevices.getDisplayMedia(gdmOptions);
+        myVideo.controls = true;
+    } catch (error) {
+        console.log('Error logged !!!')
+    }
+}
+const stopCatpture = () => {
+    let tracks = myVideo.srcObject.getTracks();
+    tracks.forEach(track => track.stop());
+    myVideo.srcObject = null;
+    myVideo.srcObject = videoTracks[0];
+}
+

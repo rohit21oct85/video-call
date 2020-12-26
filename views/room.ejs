@@ -3,24 +3,35 @@
 </script>
 <style type="text/css">
 
-#video-grid{
+    #video-grid{
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
     }
-    video{
-      height: 400px;
+    #myVideo{
+      display: flex;  
+      height: 500px;
+      width: 600px;
+      object-fit: contain;
+    }
+    
+    #userVideo{
+        display: flex;
+      height: 300px;
       width: 300px;
       object-fit: contain;
     }
+
     a{ color: white}
     .chat-header{
       width: 100%;
       padding: 15px 10px !important;
     }
-    .chat-content{
+    .main__chat_window{
       background-color:white;
       height: 74vh;
+      overflow-y: scroll;
     }
     .chat{
       display: flex;
@@ -69,17 +80,20 @@
     .leave_meeting{
         color: #f00;
     }
+    .unmute{
+        color: #f00;
+    }
 </style>
 <div class="row">
-    <div class="col-md-10 p-0">
+    <div class="col-md-10 p-0" id="leftVideoCall">
         <div class="main__video">
             <div id="video-grid"></div>
         </div>
 
         <div class="main__controls">
             <div class="main__controls__block">
-                <div class="main__controls__button"><i class="fa fa-microphone"></i> <span>Mute</span></div>
-                <div class="main__controls__button"><i class="fa fa-video-camera"></i> <span>Stop Video</span></div>
+                <div class="main__controls__button main_mute_button" onClick="muteUnmute()"><i class="fa fa-microphone"></i> <span>Mute</span></div>
+                <div class="main__controls__button main_video_button" onClick="pausePlayVideo()"><i class="fas fa-video"></i> <span>Stop Video</span></div>
             </div>
             <div class="main__controls__block">
                 <div class="main__controls__button">
@@ -91,10 +105,19 @@
                     <i class="fa fa-comments"></i>
                     <span>Chats</span>
                 </div>
-
+               
+                <div class="main__controls__button" id="startCapture">
+                    <i class="fa fa-desktop"></i>
+                    <span>Present Screen</span>
+                </div>
+                
+                <div class="main__controls__button" style="display: none;" id="stopCapture">
+                    <i class="fa fa-desktop"></i>
+                    <span>Stop Sharing</span>
+                </div>
             </div>
             <div class="main__controls__block">
-                <div class="main__controls__button leave_meeting">
+                <div class="main__controls__button leave_meeting" onClick="LeaveMeeting()">
                     <i class="fa fa-trash"></i>
                     <span>Leave Meetings</span>
                 </div>
@@ -102,9 +125,9 @@
         </div>
         
     </div>
-    <div class="col-md-2 p-0" >
+    <div class="col-md-2 p-0" id="rightVideoCall">
         <div class="chat-header">Chat </div>
-        <div class="chat-content">
+        <div class="main__chat_window">
             <ul class="chat_messages"></ul>
         </div>
         <div class="chat">
