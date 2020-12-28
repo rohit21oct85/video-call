@@ -8,8 +8,6 @@ const myPeer = new Peer({host:'peerjs-server.herokuapp.com', secure:true, port:4
 //     port: 3000
 // })
 const myVideo = document.createElement('video')
-myVideo.muted = true;
-myVideo.id = "myVideo";
 
 const peers = {}
 let tracks;
@@ -24,9 +22,9 @@ navigator.mediaDevices.getUserMedia({
     
     myPeer.on('call', call => {
         call.answer(stream)
-        // const video = document.createElement('video')
+        const video = document.createElement('video')
         call.on('stream', userVideoStream => {
-            addVideoStream(myVideo, userVideoStream)
+            addVideoStream(video, userVideoStream)
         })
     })
 
@@ -180,9 +178,9 @@ const startCatpture = async () => {
     }
 }
 const stopCatpture = () => {
-    let tracks = myVideo.srcObject.getTracks();
-    tracks.forEach(track => track.stop());
-    myVideo.srcObject = null;
-    myVideo.srcObject = videoTracks[0];
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    }).then(stream => myVideo.srcObject = stream);
+    myVideo.controls = false;
 }
-
