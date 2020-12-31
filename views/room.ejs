@@ -1,130 +1,101 @@
 <script>
     const ROOM_ID = "<%= roomId %>"
 </script>
-<style type="text/css">
-
-    #video-grid{
-        display: flex;
-        justify-content: flex
-    }
-    Video{
-      display: flex;  
-      height: 400px;
-      width: 400px;
-      object-fit: contain;
-    }
-    
-
-    a{ color: white}
-    .chat-header{
-      width: 100%;
-      padding: 15px 10px !important;
-    }
-    .main__chat_window{
-      background-color:white;
-      height: 74vh;
-      overflow-y: scroll;
-    }
-    .chat{
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 10px 0px;
-      background: #1f1e1e;
-    }
-    .chat input{
-        background: transparent;
-        flex-grow: 1;
-    }
-    .chat input:focus{
-        background: transparent;
-        flex-grow: 1;
-    }
-    .main__video{
-        background-color: black; 
-        height: 81vh; margin:0px
-    }
-    .main__controls{
-        display: flex;
-        background: #1f1e1e;
-        color: #fff;  
-       justify-content: space-between;
-    }
-    .main__controls__block{
-       display: flex;
-    }
-    .main__controls__button{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 12px 15px;
-        cursor: pointer;
-        min-width: 100px;
-    }
-    .main__controls__button i {
-        font-size: 24px;
-    }
-    .main__controls__button:hover{
-        background: #343434;
-        color: #fff;
-        border-radius: 5px;;
-    }
-    .leave_meeting{
-        color: #f00;
-    }
-    .unmute{
-        color: #f00;
-    }
-</style>
-<div class="row">
-    <div class="col-md-10 p-0" id="leftVideoCall">
-        <div class="main__video">
-            <div id="video-grid"></div>
-        </div>
-
-        <div class="main__controls">
-            <div class="main__controls__block">
-                <div class="main__controls__button main_mute_button" onClick="muteUnmute()"><i class="fa fa-microphone"></i> <span>Mute</span></div>
-                <div class="main__controls__button main_video_button" onClick="pausePlayVideo()"><i class="fas fa-video"></i> <span>Stop Video</span></div>
-            </div>
-            <div class="main__controls__block">
-                <div class="main__controls__button">
-                    <i class="fa fa-users"></i>
-                    <span>Particepants</span>
-                </div>
-                
-                <div class="main__controls__button">
-                    <i class="fa fa-comments"></i>
-                    <span>Chats</span>
-                </div>
-               
-                <div class="main__controls__button" id="startCapture">
-                    <i class="fa fa-desktop"></i>
-                    <span>Present Screen</span>
-                </div>
-                
-                <div class="main__controls__button" style="display: none;" id="stopCapture">
-                    <i class="fa fa-desktop"></i>
-                    <span>Stop Sharing</span>
-                </div>
-            </div>
-            <div class="main__controls__block">
-                <div class="main__controls__button leave_meeting" onClick="LeaveMeeting()">
-                    <i class="fa fa-trash"></i>
-                    <span>Leave Meetings</span>
-                </div>
-            </div>
-        </div>
+<script>
         
+    $(function () {
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        var meeting_id = ROOM_ID;
+
+        if (!meeting_id) {
+            var murl = window.location.origin + "?mid=" +  (new Date()).getTime();
+            $('#meetingid').attr('href',murl).text('Start Meeting');
+            $("#meetingContainer").hide();
+            $("#meetingbox").show();
+            return;
+        }
+
+        var user_id = urlParams.get('uid');
+        if (!user_id) {
+            user_id = window.prompt('Enter your nick!');
+        }
+
+        if (!user_id || !meeting_id) {
+            alert('user id or meeting id missing');
+            return;
+        }
+        $("#meetingContainer").show();
+        $("#meetingbox").hide();
+
+        MyApp._init(user_id,meeting_id);
+
+    });
+</script>
+<style type="text/css">
+    body{
+    font-size: large;
+}
+.userbox {
+    margin-left: 20px;
+    padding: 8px;
+    width: 450px;
+    /* height:366px; */
+    border: 1px solid transparent;
+    color: var(--fc-medium);
+    border-color: var(--powder-400);
+    background-color: burlywood;
+    float: left;
+}
+
+.userbox video {
+    display: inline-block;
+    border: 1px solid red;
+    margin: 0;
+    padding: 0;
+    width: 450px;
+    height: 300px;
+}
+
+.footer{
+    font-size: large;
+
+}
+</style>
+<div id="meetingbox" style="display: none;">
+    <p><a id='meetingid' style="color: #000;" href="#"></a>
+    </p>
+</div>
+
+<div id="meetingContainer" style="display: none;">
+    <h1 id='meetingname'></h1>
+    <div>
+        <div style="width:200px;height:300px;float:left;overflow-y: scroll;display:none" id="messages">
+            <div><input type="text" id="msgbox" /><button id="btnsend">Send</button></div>
+        </div>
+        <div id='divUsers' style="display:none">
+            <div id="me" class="userbox">
+                <h2></h2>
+                <div>
+                    <video autoplay muted id="localVideoCtr" />
+                </div>
+            </div>
+            <div id="otherTemplate" class="userbox" style="display:none">
+                <h2></h2>
+                <div>
+                    <video autoplay muted id="remoteVideoCtr111"></video>
+                    <audio autoplay controls style="display:none" id="remoteAudioCtr111"></audio>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col-md-2 p-0" id="rightVideoCall">
-        <div class="chat-header">Chat </div>
-        <div class="main__chat_window">
-            <ul class="chat_messages"></ul>
-        </div>
-        <div class="chat">
-            <input type="text" id="chat_input" class="form-control" />
-        </div>
+
+    <div style="clear: both;"></div>
+    <div class="toolbox" style="display:none">
+        <button id="btnMuteUnmute">UnMute</button>
+        <button id="btnStartStopCam">Start Camera</button>
+        <button id="btnStartStopScreenshare">Screen Share</button>
+        <button id="btnResetMeeting">Reset Meeting</button>
     </div>
 </div>
-<script src="/script.js" defer></script>

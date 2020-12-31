@@ -1,57 +1,60 @@
-const socket = io('/')
+const socket = io.connect('/')
 const videoGrid = document.getElementById('video-grid')
 const PORT = 3000;
 const myPeer = new Peer({host:'peerjs-server.herokuapp.com', secure:true, port:443})
-// const myPeer = new Peer({
-//     path:'/peerjs',
-//     host:'/',
-//     port: 3000
-// })
+
 const myVideo = document.createElement('video')
 
 const peers = {}
+const otherUsers = [];
 let tracks;
 let videoTracks;
-navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true
-}).then( stream => {
-    tracks = stream.getAudioTracks();
-    videoTracks = stream.getVideoTracks();
-    addVideoStream(myVideo, stream)
+    navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    }).then( stream => {
+        tracks = stream.getAudioTracks();
+        videoTracks = stream.getVideoTracks();
+        addVideoStream(myVideo, stream)
     
-    myPeer.on('call', call => {
-        call.answer(stream)
-        const video = document.createElement('video')
-        call.on('stream', userVideoStream => {
-            addVideoStream(video, userVideoStream)
+        myPeer.on('call', call => {
+            call.answer(stream)
+            const video = document.createElement('video')
+            call.on('stream', userVideoStream => {
+                addVideoStream(video, userVideoStream)
+            })
         })
-    })
+        socket.on('shareScreen', screenData => {
+            const share = document.createElement('video')
+            addVideoStream(share, screenData)
+            
+        })
+        socket.on('user-connected', userId => {
+            connectToNewUser(userId, stream)        
+        })
 
-    socket.on('user-connected', userId => {
-        console.log("User Connected: " + userId)
-        connectToNewUser(userId, stream)        
-    })
-
-
-    socket.on('user-disconnected', userId => {
-        if(peers[userId]) {
-           peers[userId].close()
-        }
-     });
+        socket.on('user-disconnected', userId => {
+            if(peers[userId]) {
+            peers[userId].close()
+            }
+        });
      
-    $('html').keydown((e) => {
-        let text = e.target.value;
-        if(e.which === 13 && text.length !== 0){
-            socket.emit('message', text)
-            $("#chat_input").val('');
-        }
-    })
+        $('html').keydown((e) => {
+            let text = e.target.value;
+            if(e.which === 13 && text.length !== 0){
+                socket.emit('message', text)
+                $(".chat_messages").append(`<li class='message meMessage'>Me: ${text}</li>`);
+                $("#chat_input").val('');
+            }
+        })
 
-    socket.on('createMessage', message => {
-        console.log('this is message from server ' + message)
-        $(".chat_messages").append(`<li class='message'>User: ${message}</li>`);
-    })
+        socket.on('createMessage', message => {
+            console.log('this is message from server ' + message)
+            $(".chat_messages").append(`<li class='message meMessage'>User: ${message}</li>`);
+        })
+
+        
+        
     
 })
 
@@ -70,7 +73,8 @@ function addVideoStream(video, stream){
 function connectToNewUser(userId , stream){
     const call = myPeer.call(userId, stream)
     const video = document.createElement('video')
-    video.id = "userVideo";
+    otherUsers.push(userId);  
+    console.log("Other Users " + otherUsers)
     call.on('stream', userVideoStream => {
         addVideoStream(video, userVideoStream)
     })
@@ -168,19 +172,23 @@ stopElem.addEventListener('click', () => {
     $("#stopCapture").css({ display: 'none'});
     stopCatpture();
 }, false);
-
-const startCatpture = async () => {
+const startCatpture = async (gdmOptions) => {
     try {
-        myVideo.srcObject = await navigator.mediaDevices.getDisplayMedia(gdmOptions);
-        myVideo.controls = true;
+        const shareScreenData = await navigator.mediaDevices.getDisplayMedia(gdmOptions);
+        const video = document.createElement('video')
+        const videoData = new MediaStream(shareScreenData);
+        // socket.emit('shareScreen', videoData);
+        addVideoStream(video, videoData)
+        otherUsers.map( userId => {
+           userId.addTrack(videoData)     
+        })
     } catch (error) {
-        console.log('Error logged !!!')
+        console.log('Error logged !!!' + error)
     }
 }
-const stopCatpture = () => {
-    navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-    }).then(stream => myVideo.srcObject = stream);
-    myVideo.controls = false;
+const stopCatpture = async () => {
+    await navigator.mediaDevices.getUserMedia({video: true, audio: true}).then( stream => {
+        myVideo.srcObject = stream;
+    });
 }
+
