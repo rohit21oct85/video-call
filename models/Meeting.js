@@ -15,6 +15,9 @@ const MeetingSchema = mongoose.Schema({
     date: {
         type: Date,
         default: Date.now()
+    },
+    meeting_type: {
+        type: String,
     }
 });
 

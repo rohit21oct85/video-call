@@ -2,41 +2,16 @@
 <h3 class="mt-2">Host Meeting</h3>
 </div>
 <hr>
-<%- include('./layouts/message') %>
+
 <div class="row pl-5">
 <div class="col-md-3">
-    <form action="/create-meeting" method="post">
-        <label for="room_name">Room Name</label>
-        <input type="text" name="room_name" id="room_name" 
-        value="<%= typeof room_name != 'undefined' ? room_name : ''%>"
-        class="form-control" autocomplete="off"
-        required >
-        <input type="hidden" name="user_id" id="user_id" value="<%= user._id %>">
-        <button type="submit" class="btn btn-success mt-2">Create Room</button>
-    </form>
+    
     </div>
 <div class="col-md-8">
     <h4>All Meetings: <%= user.name %></h4>
     <hr>
     <div class="col-md-12 pl-0 table-responsive">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Meeting Room Name</th>
-                    <th>Meeting Member</th>
-                    <th>Start Meeting</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% meetings.forEach( (el,index) => {%> 
-                <tr>
-                    <td><%= el.room_name %></td>
-                    <td>add Member</td>
-                    <td><a href="/start-meeting/<%= el.room_id %>" class="text-success">Start Meeting</a></td>
-                </tr>
-                <% })%>
-            </tbody>
-        </table>
+       
     </div>
     
 </div>

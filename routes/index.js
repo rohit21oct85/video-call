@@ -7,7 +7,7 @@ const {ensureAuthenticated} = require('../config/auth');
 
 // models
 const User = require('../models/User')
-const Meeting = require('../models/Meeting');
+const Meeting = require('../models/Meeting'); 
 
 router.get('/', (req, res) => {
     res.redirect('login');
@@ -86,7 +86,10 @@ router.post('/login', (req, res, next) => {
 });
 
 router.get('/dashboard', ensureAuthenticated, (req, res) => {
-    res.render('dashboard',{user: req.user})
+    Meeting.find({'room_host': req.user._id}).then( meeting => {
+        res.render('dashboard',{user: req.user,meetings: meeting})
+    }).catch(err => { console.error(err)})
+
 });
 
 router.get('/my-profile', ensureAuthenticated, (req, res) => {
@@ -94,15 +97,11 @@ router.get('/my-profile', ensureAuthenticated, (req, res) => {
 });
 
 
-router.get('/host-meeting', ensureAuthenticated, (req, res) => {
-    Meeting.find({'room_host': req.user._id}).then( meeting => {
-        res.render('host-meeting',{user: req.user,meetings: meeting})
-    }).catch(err => { console.error(err)})
-});
 
 router.post('/create-meeting',ensureAuthenticated, (req, res) => {
     var room_name = req.body.room_name;
     var room_id = uuidv4();
+
     var host_id = req.body.user_id;
      const errors = []
     if(!room_name ){
@@ -121,12 +120,13 @@ router.post('/create-meeting',ensureAuthenticated, (req, res) => {
                         const newMeeting = new Meeting({
                             room_name: room_name,
                             room_id: room_id,
-                            room_host: host_id
+                            room_host: host_id,
                         });
                         newMeeting.save()
                         .then( user => {
                             req.flash('success_msg','Room Created Successfully');
-                            res.redirect('/host-meeting');
+                            res.redirect('/start-meeting/'+room_id);
+                            
                         }).catch(err => {
                             console.log(err);
                         })
@@ -139,9 +139,24 @@ router.post('/create-meeting',ensureAuthenticated, (req, res) => {
 });
 
 
-router.get('/start-meeting/:room', (req, res) => {
-    res.render('room',{roomId: req.params.room, user:req.user})
+router.get('/start-meeting/:room', ensureAuthenticated, async (req, res) => {
+    const room_id = req.params.room;
+    let rooms;
+    Meeting.findOne({ room_id: room_id}).then(meeting => {
+        res.render('room',{roomId: req.params.room, user:req.user, meeting: meeting})
+    }).catch(err => { console.log(err.message)});
 })
+
+router.get('/delete-meeting/:id', ensureAuthenticated, async (req, res) => {
+    const id = req.params.id;
+    
+    await Meeting.deleteOne({ _id: id}).then(meeting => {
+        req.flash('success_msg','Your meeting deleted successfully');
+                                
+        res.redirect('/dashboard');
+    }).catch(err => { console.log(err.message)});
+})
+
 
 router.get('/logout', (req, res) => {
     req.logout();

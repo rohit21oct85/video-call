@@ -48,10 +48,35 @@ function SignalServerEventBinding(){
     socket.on('informAboutConnectionEnd',function (connId) {
         $('#' + connId).remove();
         WrtcHelper.closeExistingConnection(connId);
+        var count = $("#right_thumbnails_div").children().length;
+        $(".num_of_users").text(count);
+        if(count == 1){
+            $("#me").parent().addClass('col-md-12 p-0');
+        }else{
+            $("#me").parent().removeClass('col-md-12 p-0');
+        }
     });
 
     socket.on('showChatMessage', function (data) {
-        var div = $("<div>").text(data.from + '(' + data.time + '):' + data.message);
+        var user_id = $("#userId").val();
+        const {message, userId} = data.message;
+        if(user_id === userId){
+            var div = `
+            <div class="msg_div msg_right">
+                <div class="user_name">${data.from} Me</div>
+                <div class="msg_box">${message}</div>
+                <div class="date">Thu</div>
+            </div>
+            `;
+        }else{
+            var div = `
+            <div class="msg_div">
+                <div class="user_name">${data.from}</div>
+                <div class="msg_box">${message}</div>
+                <div class="date">Thu</div>
+            </div>
+            `;
+        }
         $('#messages').append(div);
     });
 
@@ -60,6 +85,7 @@ function SignalServerEventBinding(){
             WrtcHelper.init(serverFn, socket.id);
 
             if (user_id != "" && meeting_id != "") {
+                
                 socket.emit('userconnect',{dsiplayName:user_id, meetingid:meeting_id});
                 //_hub.server.connect(user_id, meeting_id)
                 
@@ -75,6 +101,7 @@ function SignalServerEventBinding(){
                 WrtcHelper.createNewConnection(other_users[i].connectionId);
             }
         }
+        
         $(".toolbox").show();
         $('#messages').show();
         $('#divUsers').show();
@@ -87,9 +114,13 @@ function EventBinding(){
     });
 
     $('#btnsend').on('click', function () {
-        //_hub.server.sendMessage($('#msgbox').val());
-        socket.emit('sendMessage',$('#msgbox').val());
-        $('#msgbox').val('');
+        let message = $('#msgbox').val();
+        let userId = $('#userId').val();
+        let data = {message: message, userId: userId}
+        if(message.length != 0){
+            socket.emit('sendMessage',data);
+            $('#msgbox').val('');
+        }
     });
 
     $('#divUsers').on('dblclick', 'video', function () {
@@ -104,7 +135,14 @@ function AddNewUser(other_user_id, connId) {
     $newDiv.find('video').attr('id', 'v_' + connId);
     $newDiv.find('audio').attr('id', 'a_' + connId);
     $newDiv.show();
-    $('#divUsers').append($newDiv);
+    $('#right_thumbnails_div').show();
+    $('#divUsers #right_thumbnails_div').append($newDiv);
+    var count = $("#right_thumbnails_div").children().length;
+    $(".num_of_users").text(count);
+    if(count > 1){
+        $("#me").parent().removeClass('col-md-12 p-0');
+    }
+                
 }
 
 return {

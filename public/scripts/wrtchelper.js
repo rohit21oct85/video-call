@@ -52,13 +52,18 @@ var WrtcHelper = (function () {
 
             if (_isAudioMute) {
                 _audioTrack.enabled = true;
-                $(this).text("Mute");
+                // $(this).text("Mute");
+                $(this).removeClass('btnoff');
+                $(this).empty();
+                $(this).append( "<i class='fas fa-microphone' title='Mute'></i>" );
                 AddUpdateAudioVideoSenders(_audioTrack, _rtpAudioSenders);
             }
             else {
                 _audioTrack.enabled = false;
-                $(this).text("Unmute");
-
+                // $(this).text("Unmute");
+                $(this).empty();
+                $(this).addClass('btnoff');
+                $(this).append( "<i class='fas fa-microphone-slash' title='UnMute'></i>" );
                 RemoveAudioVideoSenders(_rtpAudioSenders);
             }
             _isAudioMute = !_isAudioMute;
@@ -68,18 +73,22 @@ var WrtcHelper = (function () {
         $("#btnStartStopCam").on('click', async function () {
 
             if (_videoState == VideoStates.Camera) { //Stop case
+                await $("#user_indication_me").css({'display':'block'});
                 await ManageVideo(VideoStates.None);
             }
             else {
+                await $("#user_indication_me").css({'display':'none'});
                 await ManageVideo(VideoStates.Camera);
             }
         });
         $("#btnStartStopScreenshare").on('click', async function () {
 
             if (_videoState == VideoStates.ScreenShare) { //Stop case
+                await $("#user_indication_me").css({'display':'block'});
                 await ManageVideo(VideoStates.None);
             }
             else {
+                await $("#user_indication_me").css({'display':'none'});
                 await ManageVideo(VideoStates.ScreenShare);
             }
         });
@@ -88,8 +97,12 @@ var WrtcHelper = (function () {
     async function ManageVideo(_newVideoState) {
 
         if (_newVideoState == VideoStates.None) {
-            $("#btnStartStopCam").text('Start Camera');
-            $("#btnStartStopScreenshare").text('Screen Share');
+            $("#btnStartStopCam").addClass('btnoff').addClass('camera_off');
+                $("#btnStartStopCam").find('i').attr("title", "Start Camera");
+            // $("#btnStartStopCam").text('Start Camera');
+            // $("#btnStartStopScreenshare").text('Screen Share');
+            $("#btnStartStopScreenshare").find('i').attr("title", "Screen Share");
+                $("#btnStartStopScreenshare").removeClass('btnoff').removeClass('camera_off');
             _videoState = _newVideoState;
 
             ClearCurrentVideoCamStream(_rtpVideoSenders);
@@ -119,7 +132,9 @@ var WrtcHelper = (function () {
 
                 vstream.oninactive = e => {
                     ClearCurrentVideoCamStream(_rtpVideoSenders);
-                    $("#btnStartStopScreenshare").text('Screen Share');
+                    // $("#btnStartStopScreenshare").text('Screen Share');
+                    $("#btnStartStopScreenshare").find('i').attr("title", "Screen Share");
+                    $("#btnStartStopScreenshare").removeClass('btnoff').removeClass('camera_off');
                 };
             }
 
@@ -128,12 +143,20 @@ var WrtcHelper = (function () {
             _videoState = _newVideoState;
 
             if (_newVideoState == VideoStates.Camera) {
-                $("#btnStartStopCam").text('Stop Camera');
-                $("#btnStartStopScreenshare").text('Screen Share');
+                $("#btnStartStopCam").removeClass('btnoff').removeClass('camera_off');
+                $("#btnStartStopCam").find('i').attr("title", "Stop Camera");
+                // $("#btnStartStopCam").text('Stop Camera');
+                $("#btnStartStopScreenshare").find('i').attr("title", "Screen Share");
+                $("#btnStartStopScreenshare").removeClass('btnoff').removeClass('camera_off');
+                // $("#btnStartStopScreenshare").text('Screen Share');
             }
             else if (_newVideoState == VideoStates.ScreenShare) {
-                $("#btnStartStopCam").text('Start Camera');
-                $("#btnStartStopScreenshare").text('Stop Screen Share');
+                // $("#btnStartStopCam").text('Start Camera');
+                $("#btnStartStopCam").addClass('btnoff').addClass('camera_off');
+                $("#btnStartStopCam").find('i').attr("title", "Start Camera");
+                // $("#btnStartStopScreenshare").text('Stop Screen Share');
+                $("#btnStartStopScreenshare").addClass('btnoff').addClass('camera_off');
+                $("#btnStartStopScreenshare").find('i').attr("title", "Stop Screen Share");
             }
 
             if (vstream && vstream.getVideoTracks().length > 0) {

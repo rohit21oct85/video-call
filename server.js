@@ -48,6 +48,7 @@ app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg')
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error');
+    res.locals.page = '';
     next();
 })
 //db config
@@ -85,7 +86,7 @@ io.on('connection', (socket) => {
         });
         
         socket.emit('userconnected',other_users);
-        //return other_users;
+        // return other_users;
     });//end of userconnect
 
     socket.on('exchangeSDP',(data)=>{
@@ -111,21 +112,17 @@ io.on('connection', (socket) => {
     });//end of reset
 
     socket.on('sendMessage',(msg)=>{
-        console.log(msg);
         var userObj = _userConnections.find(p => p.connectionId == socket.id);
         if(userObj){
-            
+            console.log(userObj)
             var meetingid = userObj.meeting_id;
             var from = userObj.user_id;
-
             var list = _userConnections.filter(p => p.meeting_id == meetingid);
-            console.log(list)
-
             list.forEach(v => {
-                socket.to(v.connectionId).emit('showChatMessage',{from:from,message:msg,time:getCurrDateTime()});
+                socket.to(v.connectionId).emit('showChatMessage',{from:from,message:msg,userID: user_id,time:getCurrDateTime()});
             });
 
-            socket.emit('showChatMessage',{from:from,message:msg,time:getCurrDateTime()});
+            socket.emit('showChatMessage',{from:from,message:msg,userID: user_id,time:getCurrDateTime()});
         }
         
     });//end of reset
