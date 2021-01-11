@@ -32,7 +32,7 @@ function SignalServerEventBinding(){
     };
 
     socket.on('reset',function () {
-        location.reload();
+        window.location.href = '/dashboard';
     });
 
     socket.on('exchangeSDP', async function (data) {
@@ -110,7 +110,13 @@ function SignalServerEventBinding(){
 
 function EventBinding(){
     $('#btnResetMeeting').on('click', function () {
-        socket.emit('reset');
+        let msg = confirm('do you want to end meetings...?');
+        if(msg){
+            socket.emit('reset');
+        }else{
+            return false;
+        }
+
     });
 
     $('#btnsend').on('click', function () {
