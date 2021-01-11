@@ -11,7 +11,7 @@ $(document).ready(function(){
     $(document).on('click',"#LeaveMeeting", function(){
         let msg = confirm('do you want to leave meetings...?');
         if(msg){
-            window.location.href = 'dashboard';
+            window.location.href = '/dashboard';
         }else{
             return false;
         }
