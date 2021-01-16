@@ -8,7 +8,6 @@ var user_id = '';
 function init(uid,mid){
     user_id = uid;
     meeting_id = mid;
-
     $('#meetingname').text(meeting_id);
     $('#me h2').text(user_id + '(Me)');
     document.title = user_id;
@@ -95,7 +94,7 @@ function SignalServerEventBinding(){
 
     socket.on('userconnected',function(other_users){
         $('#divUsers .other').remove();
-        if (other_users) {
+        if(other_users) {
             for (var i = 0; i < other_users.length; i++) {
                 AddNewUser(other_users[i].user_id, other_users[i].connectionId);
                 WrtcHelper.createNewConnection(other_users[i].connectionId);
@@ -132,19 +131,30 @@ function EventBinding(){
     $('#divUsers').on('dblclick', 'video', function () {
         this.requestFullscreen();
     });
+    $(document).on('click', ".function_btn_remote", function(e){
+        let other_id = $(this).attr('id');
+        ver audioOther =  
+    })
 }
 
 function AddNewUser(other_user_id, connId) {
+    var cuid = localStorage.getItem('user_id');
+    var rowner = localStorage.getItem('owner_id');
     var $newDiv = $('#otherTemplate').clone();
     $newDiv = $newDiv.attr('id', connId).addClass('other');
     $newDiv.find('h2').text(other_user_id);
     $newDiv.find('video').attr('id', 'v_' + connId);
     $newDiv.find('audio').attr('id', 'a_' + connId);
+    $newDiv.find('button').attr('id', 'aBtn_' + connId);
+    $newDiv.find('p').attr('id', 'u_' + connId).text(other_user_id.substring(0,1).toUpperCase());
     $newDiv.show();
     $('#right_thumbnails_div').show();
     $('#divUsers #right_thumbnails_div').append($newDiv);
     var count = $("#right_thumbnails_div").children().length;
     $(".num_of_users").text(count);
+    if(cuid !== rowner){
+        $("#aBtn_"+connId).hide();
+    }
     if(count > 1){
         $("#me").parent().removeClass('col-md-12 p-0');
     }

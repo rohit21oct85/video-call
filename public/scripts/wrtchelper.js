@@ -34,11 +34,13 @@ var WrtcHelper = (function () {
         _my_connid = myconnid;
         _serverFn = serFn;
         _localVideoPlayer = document.getElementById('localVideoCtr');
-
         eventBinding();
+        console.log("my id "+ myconnid)
     }
 
-    function eventBinding() {
+    function eventBinding(){
+
+        
         $("#btnMuteUnmute").on('click', async function () {
 
             if (!_audioTrack) {
@@ -257,6 +259,7 @@ var WrtcHelper = (function () {
             }
         }
         // New remote media stream was added
+
         connection.ontrack = function (event) {
 
             // event.track.onunmute = () => {
@@ -264,37 +267,46 @@ var WrtcHelper = (function () {
             // };     
 
             if (!_remoteVideoStreams[connid]){
+                
                 _remoteVideoStreams[connid] = new MediaStream();
+                
             }
 
             if (!_remoteAudioStreams[connid])
                 _remoteAudioStreams[connid] = new MediaStream();
 
             if (event.track.kind == 'video') {
-                _remoteVideoStreams[connid].getVideoTracks().forEach(t => _remoteVideoStreams[connid].removeTrack(t));
+                _remoteVideoStreams[connid].getVideoTracks().forEach(t => {
+                    _remoteVideoStreams[connid].removeTrack(t);
+                   
+                });
                 _remoteVideoStreams[connid].addTrack(event.track);
                 //_remoteVideoStreams[connid].getTracks().forEach(t => console.log(t));
 
-                var _remoteVideoPlayer = document.getElementById('v_' + connid)
+                var _remoteVideoPlayer = document.getElementById('v_' + connid);
+                var _remoteUser = document.getElementById('u_'+ connid);
+                $(_remoteUser).hide();
+
                 _remoteVideoPlayer.srcObject = null;
                 _remoteVideoPlayer.srcObject = _remoteVideoStreams[connid];
                 _remoteVideoPlayer.load();
-                //$(_remoteVideoPlayer).show();
 
-                // event.track.onmute = function() {
-                //     console.log(connid + ' muted');
-                //    console.log(this.muted+ ' muted');
-                //    console.log(event.track.muted+ ' muted');
-                //    console.log(this.readyState+ ' muted');
-                //    console.log('muted',this);
-                //    console.log('muted',_remoteVideoStreams[connid] );
-                //    console.log('muted',_remoteVideoPlayer.paused);
-                //    console.log('muted',_remoteVideoPlayer.readyState );
-                //    console.log('muted',_remoteVideoPlayer.ended );
-                //    if(this.muted){
-                //     //_remoteVideoPlayer.srcObject = null;
-                //    }
-                // };
+                event.track.onmute = function() {
+                   console.log(connid + ' muted');
+                   console.log(this.muted+ ' muted');
+                   console.log(event.track.muted+ ' muted');
+                   console.log(this.readyState+ ' muted');
+                   console.log('muted',this);
+                   console.log('muted',_remoteVideoStreams[connid] );
+                   console.log('muted',_remoteVideoPlayer.paused);
+                   console.log('muted',_remoteVideoPlayer.readyState );
+                   console.log('muted',_remoteVideoPlayer.ended );
+                   if(this.muted){
+                    _remoteVideoPlayer.srcObject = null;
+                    var _remoteUser = document.getElementById('u_'+ connid);
+                    $(_remoteUser).css({'display': 'block'});
+                   }
+                };
             }
             else if (event.track.kind == 'audio') {
                 var _remoteAudioPlayer = document.getElementById('a_' + connid)

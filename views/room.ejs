@@ -5,27 +5,23 @@
 <link rel="stylesheet" href="/css/roome.css">
 <script>
     const ROOM_ID = "<%= roomId %>";
-    const USER = "<%= user.name %>";
-    const USER_id = "<%= user.id %>";
+    const USER_NAME = "<%= user.name %>";
+    const USER_ID = "<%= user.id %>";
     const ROOM_NAME = "<%= meeting.room_name %>";
     const ROOM_HOST = "<%= meeting.room_host %>";
+    localStorage.setItem('owner_id', ROOM_HOST);
+    localStorage.setItem('user_id', USER_ID);
 </script>
 <script>
 $(function () {
     const urlParams = new URLSearchParams(window.location.search);
     var meeting_id = ROOM_ID;
-    if (!meeting_id) {
-        var murl = window.location.origin + "?mid=" +  (new Date()).getTime();
-        $('#meetingid').attr('href',murl).text('Start Meeting');
-        $("#meetingContainer").hide();
-        $("#meetingbox").show();
-        return;
-    }
-    var user_id = USER;
+    var user_name = USER_NAME;
+
     $("#meetingContainer").show();
     $("#meetingbox").hide();
-    MyApp._init(user_id,meeting_id);
-
+    MyApp._init(user_name,meeting_id);
+    
     $('#chatWithEveryone').click(function(){
         $('#chat_tab').toggle();
         $('#video_conferencing_main').toggleClass('col-lg-12');
@@ -87,7 +83,7 @@ function myTimer() {
                             <div id="me" class="userbox">
                                 
                                 <h2 class="meeting_host_name"></h2>
-                                <div style="position: relative">
+                                <div style="position: relative" class="flex justify-content items-center">
                                     <div class="user_indication_me" id="user_indication_me">
                                         <%= user.name.substring(0,1).toUpperCase() %>
                                     </div>
@@ -100,9 +96,10 @@ function myTimer() {
                             <div id="otherTemplate" class="userbox" style="display:none">
                                 <h2 class="otherTemplateTitle"></h2>
                                 <div style="position: relative">
-
                                     <video autoplay muted id="remoteVideoCtr111"></video>
-                                    <audio autoplay controls style="display:none" id="remoteAudioCtr111"></audio>
+                                    <audio autoplay style="display: none" id="remoteAudioCtr111"></audio>
+                                    <button id="audioBtn" class="btn function_btn_remote btnoff"><i class="fas fa-microphone-slash" title="UnMute"></i></button>
+                                    <p class="user_remote" id="user_remote"></p>
                                 </div>
                             </div>
                         </div>
@@ -121,8 +118,8 @@ function myTimer() {
                     <div class="toolbox" style="display:none; ">
                         <button id="btnMuteUnmute" class="btn function_btn btnoff"><i class="fas fa-microphone-slash" title="UnMute"></i></button>
                         <button id="btnStartStopCam" class="btn function_btn camera_off btnoff"><i class="fas fa-video" title="Start Camera"></i></button>
-                        <button id="btnStartStopScreenshare" class="btn function_btn"><i class="fas fa-desktop" title="Screen Share"></i></button>
-                        <%if (meeting.room_host === user.id) { %>
+                        <%if(meeting.room_host === user.id) { %>
+                            <button id="btnStartStopScreenshare" class="btn function_btn"><i class="fas fa-desktop" title="Screen Share"></i></button>
                             <button id="btnResetMeeting" class="btn function_btn"><i class="fas fa-redo" title="End Meeting"></i></button>
                         <% } else {%>
                             <button id="LeaveMeeting" class="btn function_btn text_danger">
