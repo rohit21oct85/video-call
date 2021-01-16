@@ -133,7 +133,7 @@ function EventBinding(){
     });
     $(document).on('click', ".function_btn_remote", function(e){
         let other_id = $(this).attr('id');
-        ver audioOther =  
+        console.log(other_id);
     })
 }
 
