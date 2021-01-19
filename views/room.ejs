@@ -1,5 +1,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <script src="/scripts/jquery-3.4.1.min.js"></script>
+<script src="/scripts/video-stream-merger.js"></script>
 <script src="/scripts/wrtchelper.js"></script>
 <script src="/scripts/app.js"></script>
 <link rel="stylesheet" href="/css/roome.css">
@@ -88,6 +89,7 @@ function myTimer() {
                                         <%= user.name.substring(0,1).toUpperCase() %>
                                     </div>
                                     <video autoplay muted id="localVideoCtr" />
+                                    <video autoplay muted controls id="videoCtrRec" width="480" height="320" style="display:none"></video>
                                 </div>
                             </div>
                         </div>
@@ -121,6 +123,14 @@ function myTimer() {
                         <%if(meeting.room_host === user.id) { %>
                             <button id="btnStartStopScreenshare" class="btn function_btn"><i class="fas fa-desktop" title="Screen Share"></i></button>
                             <button id="btnResetMeeting" class="btn function_btn"><i class="fas fa-redo" title="End Meeting"></i></button>
+                            
+                            <button id="btnStartReco" class="btn function_btn" style="display: none"><i class="fas fa-record-vinyl" title="Record Meeting"></i></button>
+                            <button id="btnPauseReco" style="display:none">Pause</button>
+                            <button id="btnResumeReco" style="display:none">Resume</button>
+                            <button id="btnStopReco" style="display:none">Stop</button>
+
+                            <a href="" id="downloadRecording" style="display:none">Download</a>
+
                         <% } else {%>
                             <button id="LeaveMeeting" class="btn function_btn text_danger">
                                 <i class="fas fa-stop" title="Leave Meeting"></i>

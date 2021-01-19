@@ -29,6 +29,10 @@ var WrtcHelper = (function () {
     var _videoCamSSTrack;
     var _isAudioMute = true;
     var _my_connid = '';
+    
+    var _mediaRecorder;
+    var _recordedChunks = [];
+
 
     async function _init(serFn, myconnid) {
         _my_connid = myconnid;
@@ -76,13 +80,18 @@ var WrtcHelper = (function () {
 
             if (_videoState == VideoStates.Camera) { //Stop case
                 await $("#user_indication_me").css({'display':'block'});
+                await $("#btnStartReco").css({'display':'none'});
                 await ManageVideo(VideoStates.None);
+
             }
             else {
                 await $("#user_indication_me").css({'display':'none'});
+                await $("#btnStartReco").css({'display':'block'});
                 await ManageVideo(VideoStates.Camera);
             }
+            console.log(VideoStates);
         });
+
         $("#btnStartStopScreenshare").on('click', async function () {
 
             if (_videoState == VideoStates.ScreenShare) { //Stop case
@@ -91,18 +100,108 @@ var WrtcHelper = (function () {
             }
             else {
                 await $("#user_indication_me").css({'display':'none'});
+                
                 await ManageVideo(VideoStates.ScreenShare);
             }
         });
+
+        $("#btnStartReco").on('click', async function(){
+            // $("#btnRecordCam").attr('id','btnStopRecord');
+            // $("#btnStopRecord i").addClass('fa-stop').attr('title', 'Stop Recording');
+            setupMediaRecorder();
+            _mediaRecorder.start(1000);
+        });
+
+        $("#btnPauseReco").on('click', function () {
+            _mediaRecorder.pause();
+        });
+        $("#btnResumeReco").on('click', function () {
+            _mediaRecorder.resume();
+        });
+        $("#btnStopReco").on('click', function () {
+            _mediaRecorder.stop();
+        });
+
+        $(document).on('click', ".function_btn_remote", async function(e){
+            let other_id = $(this).attr('id');
+            let muted = true;
+            let _audioTrack = _remoteAudioStreams[other_id].getAudioTracks()[0];
+            _audioTrack.muted = !muted;
+            $(this).empty();
+            await $(this).append( "<i class='fas fa-microphone' title='Mute'></i>" );
+        })
+
     }
+
+    function setupMediaRecorder() {
+        console.log(_remoteVideoStreams);
+        console.log(_remoteAudioStreams);
+        return;
+        debugger;
+        var stream = new MediaStream([_audioTrack]);
+        
+        if (_videoCamSSTrack && _videoCamSSTrack.readyState === "live") {
+           stream.addTrack(_videoCamSSTrack);
+        }
+
+        stream.getTracks().forEach(track => {
+            console.log(track);
+        })
+
+        _recordedChunks = [];
+        
+        _mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8,opus' });
+        
+        _mediaRecorder.ondataavailable = (e) => {
+            console.log(e.data.size);
+            if(e.data.size > 0)
+                _recordedChunks.push(e.data);
+        };
+        _mediaRecorder.onstart = async () => {
+            console.log('onstart');
+            $("#btnStartReco").hide();
+            $("#btnPauseReco").show();
+            $("#btnStopReco").show();
+            $("#downloadRecording").hide();
+        };
+        _mediaRecorder.onpause = async () => {
+            $("#btnPauseReco").hide();
+            $("#btnResumeReco").show();
+        };
+        _mediaRecorder.onresume = async () => {
+            $("#btnResumeReco").hide();
+            $("#btnPauseReco").show();
+            $("#btnStopReco").show();
+        };
+
+        _mediaRecorder.onstop = async () => {
+            console.log('onstop');
+            var blob = new Blob(_recordedChunks, { type: 'video/webm' });
+            let url = window.URL.createObjectURL(blob);
+            
+            var videoRecPlayer = document.getElementById('videoCtrRec');
+            videoRecPlayer.src = url;
+            videoRecPlayer.play();
+            $(videoRecPlayer).show();
+
+            $("#downloadRecording").attr({ href: url, download: 'video.webm' }).show();
+            $("#btnStartReco").show();
+            $("#btnPauseReco").hide();
+            $("#btnStopReco").hide();
+            var download = document.getElementById('downloadRecording');
+            download.href = url;
+            download.download = 'test.weba';
+            download.style.display = 'block';
+        };
+    }
+
     //Camera or Screen Share or None
     async function ManageVideo(_newVideoState) {
 
         if (_newVideoState == VideoStates.None) {
             $("#btnStartStopCam").addClass('btnoff').addClass('camera_off');
-                $("#btnStartStopCam").find('i').attr("title", "Start Camera");
-            // $("#btnStartStopCam").text('Start Camera');
-            // $("#btnStartStopScreenshare").text('Screen Share');
+            $("#btnStartStopCam").find('i').attr("title", "Start Camera");
+            
             $("#btnStartStopScreenshare").find('i').attr("title", "Screen Share");
                 $("#btnStartStopScreenshare").removeClass('btnoff').removeClass('camera_off');
             _videoState = _newVideoState;
@@ -166,7 +265,6 @@ var WrtcHelper = (function () {
 
                 if (_videoCamSSTrack) {
                     _localVideoPlayer.srcObject = new MediaStream([_videoCamSSTrack]);
-
                     AddUpdateAudioVideoSenders(_videoCamSSTrack, _rtpVideoSenders);
                 }
             }
@@ -410,6 +508,7 @@ var WrtcHelper = (function () {
             _remoteVideoStreams[connid] = null;
         }
     }
+
     return {
         init: async function (serverFn, my_connid) {
             await _init(serverFn, my_connid);

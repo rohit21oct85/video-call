@@ -131,10 +131,6 @@ function EventBinding(){
     $('#divUsers').on('dblclick', 'video', function () {
         this.requestFullscreen();
     });
-    $(document).on('click', ".function_btn_remote", function(e){
-        let other_id = $(this).attr('id');
-        console.log(other_id);
-    })
 }
 
 function AddNewUser(other_user_id, connId) {
@@ -145,7 +141,7 @@ function AddNewUser(other_user_id, connId) {
     $newDiv.find('h2').text(other_user_id);
     $newDiv.find('video').attr('id', 'v_' + connId);
     $newDiv.find('audio').attr('id', 'a_' + connId);
-    $newDiv.find('button').attr('id', 'aBtn_' + connId);
+    $newDiv.find('button').attr('id', connId);
     $newDiv.find('p').attr('id', 'u_' + connId).text(other_user_id.substring(0,1).toUpperCase());
     $newDiv.show();
     $('#right_thumbnails_div').show();
