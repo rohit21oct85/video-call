@@ -141,7 +141,8 @@ function AddNewUser(other_user_id, connId) {
     $newDiv.find('h2').text(other_user_id);
     $newDiv.find('video').attr('id', 'v_' + connId);
     $newDiv.find('audio').attr('id', 'a_' + connId);
-    $newDiv.find('button').attr('id', connId);
+    // $newDiv.find('button#audioBtn').attr('id', "aB___"+connId);
+    $newDiv.find('button#rsBtn').attr('id', "rsBtn___"+connId);
     $newDiv.find('p').attr('id', 'u_' + connId).text(other_user_id.substring(0,1).toUpperCase());
     $newDiv.show();
     $('#right_thumbnails_div').show();
@@ -149,7 +150,8 @@ function AddNewUser(other_user_id, connId) {
     var count = $("#right_thumbnails_div").children().length;
     $(".num_of_users").text(count);
     if(cuid !== rowner){
-        $("#aBtn_"+connId).hide();
+        // $("#aB___"+connId).css({'display': 'none'});
+        $("#rsBtn___"+connId).css({'display': 'none'});
     }
     if(count > 1){
         $("#me").parent().removeClass('col-md-12 p-0');

@@ -4,6 +4,12 @@
 <script src="/scripts/wrtchelper.js"></script>
 <script src="/scripts/app.js"></script>
 <link rel="stylesheet" href="/css/roome.css">
+<style>
+.btn:hover {
+color: #f90 !important;
+text-decoration: none;
+}
+</style>
 <script>
     const ROOM_ID = "<%= roomId %>";
     const USER_NAME = "<%= user.name %>";
@@ -89,7 +95,7 @@ function myTimer() {
                                         <%= user.name.substring(0,1).toUpperCase() %>
                                     </div>
                                     <video autoplay muted id="localVideoCtr" />
-                                    <video autoplay muted controls id="videoCtrRec" width="480" height="320" style="display:none"></video>
+                                    <video autoplay muted id="videoCtrRec" style="display: none"/>
                                 </div>
                             </div>
                         </div>
@@ -99,9 +105,10 @@ function myTimer() {
                                 <h2 class="otherTemplateTitle"></h2>
                                 <div style="position: relative">
                                     <video autoplay muted id="remoteVideoCtr111"></video>
-                                    <audio autoplay style="display: none" id="remoteAudioCtr111"></audio>
-                                    <button id="audioBtn" class="btn function_btn_remote btnoff"><i class="fas fa-microphone-slash" title="UnMute"></i></button>
+                                    <audio autoplay id="remoteVideoCall"></audio>
                                     <p class="user_remote" id="user_remote"></p>
+                                    <!-- <button id="audioBtn" class="btn function_btn_unmute_audio"><i class="fas fa-microphone-slash" title="UnMute"></i></button> -->
+                                    <button id="rsBtn" class="btn function_btn_share_screen"><i class="fas fa-desktop" title="Screen Share"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -131,7 +138,9 @@ function myTimer() {
 
                             <a href="" id="downloadRecording" style="display:none">Download</a>
 
-                        <% } else {%>
+                        <% } else { %>
+                            <div id="remoteControlls">
+                            </div>
                             <button id="LeaveMeeting" class="btn function_btn text_danger">
                                 <i class="fas fa-stop" title="Leave Meeting"></i>
                             </button>

@@ -281,7 +281,7 @@ i#btnsend {
   border-radius: 50%;
   font-size: 2rem;
   position: absolute;
-  top: 35%;
+  top: 25%;
   right: 44%;
 }
 
@@ -329,4 +329,20 @@ i#btnsend {
 .msg_div.msg_right .user_name {
   margin-left: auto;
   color: #f73d3d;
+}
+.function_btn_unmute_audio{
+  background: #fefefe;
+  color: #ff0000;
+}
+.function_btn_mute_audio{
+  background: #fefefe;
+}
+
+.function_btn_share_screen{
+  background: #fff;
+}
+
+.function_btn_remove_screen{
+  background: #fefefe;
+  color: #ff0000;
 }

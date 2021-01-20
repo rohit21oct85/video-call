@@ -38,11 +38,12 @@ var WrtcHelper = (function () {
         _my_connid = myconnid;
         _serverFn = serFn;
         _localVideoPlayer = document.getElementById('localVideoCtr');
-        eventBinding();
+        eventBinding(myconnid);
         console.log("my id "+ myconnid)
+        $("#remoteControlls").attr("id","myControlls"+myconnid);
     }
 
-    function eventBinding(){
+    function eventBinding(myconnid){
 
         
         $("#btnMuteUnmute").on('click', async function () {
@@ -105,6 +106,21 @@ var WrtcHelper = (function () {
             }
         });
 
+        $(document).on('click', "#remoteStartStopScreenshare_"+myconnid, async function () {
+
+            if(_videoState == VideoStates.ScreenShare) { //Stop case
+                await $("#user_indication_me").css({'display':'block'});
+                await ManageVideo(VideoStates.None);
+            }
+            else {
+                await $("#user_indication_me").css({'display':'none'});
+                
+                await ManageVideo(VideoStates.ScreenShare);
+            }
+        });    
+        
+
+
         $("#btnStartReco").on('click', async function(){
             // $("#btnRecordCam").attr('id','btnStopRecord');
             // $("#btnStopRecord i").addClass('fa-stop').attr('title', 'Stop Recording');
@@ -122,27 +138,61 @@ var WrtcHelper = (function () {
             _mediaRecorder.stop();
         });
 
-        $(document).on('click', ".function_btn_remote", async function(e){
-            let other_id = $(this).attr('id');
-            let muted = true;
-            let _audioTrack = _remoteAudioStreams[other_id].getAudioTracks()[0];
-            _audioTrack.muted = !muted;
-            $(this).empty();
-            await $(this).append( "<i class='fas fa-microphone' title='Mute'></i>" );
-        })
+        $(document).on('click', ".function_btn_unmute_audio", async function(e){
+            let div = $(this).attr('id');
+            $(this).addClass('function_btn_mute_audio');
+            $(this).removeClass('function_btn_unmute_audio');
+            let other_id = div.split('___')[1];
+            _serverFn(JSON.stringify({'unmuteAudio': other_id }), other_id);
+        });
+        
+        $(document).on('click', ".function_btn_mute_audio", async function(e){
+            let div = $(this).attr('id');
+            $(this).addClass('function_btn_unmute_audio');
+            $(this).removeClass('function_btn_mute_audio');
+            let other_id = div.split('___')[1];
+            _serverFn(JSON.stringify({'muteAudio': other_id }), other_id);
+        });
+
+        
+        $(document).on('click', ".function_btn_share_screen", async function(e){
+            let div = $(this).attr('id');
+            $(this).addClass('function_btn_remove_screen');
+            $(this).removeClass('function_btn_share_screen');
+            let other_id = div.split('___')[1];
+            _serverFn(JSON.stringify({'allowShareScreen': other_id }), other_id);
+        });
+        
+        $(document).on('click', ".function_btn_remove_screen", async function(e){
+            let div = $(this).attr('id');
+            $(this).addClass('function_btn_share_screen');
+            $(this).removeClass('function_btn_remove_screen');
+            let other_id = div.split('___')[1];
+            _serverFn(JSON.stringify({'removeShareScreen': other_id }), other_id);
+        });
+
+        
 
     }
 
     function setupMediaRecorder() {
         console.log(_remoteVideoStreams);
         console.log(_remoteAudioStreams);
-        return;
+       
         debugger;
         var stream = new MediaStream([_audioTrack]);
         
         if (_videoCamSSTrack && _videoCamSSTrack.readyState === "live") {
            stream.addTrack(_videoCamSSTrack);
         }
+
+        _remoteVideoStreams.forEach(vstream => {
+            stream.addTrack(vstream.getVideoStream()[0]);
+        })
+        
+        _remoteAudioStreams.forEach(astream => {
+            stream.addTrack(astream.getAudioStream()[0]);
+        })
 
         stream.getTracks().forEach(track => {
             console.log(track);
@@ -179,10 +229,10 @@ var WrtcHelper = (function () {
             var blob = new Blob(_recordedChunks, { type: 'video/webm' });
             let url = window.URL.createObjectURL(blob);
             
-            var videoRecPlayer = document.getElementById('videoCtrRec');
-            videoRecPlayer.src = url;
-            videoRecPlayer.play();
-            $(videoRecPlayer).show();
+            // var videoRecPlayer = document.getElementById('videoCtrRec');
+            // videoRecPlayer.src = url;
+            // videoRecPlayer.play();
+            // $(videoRecPlayer).css({'display': 'block'});
 
             $("#downloadRecording").attr({ href: url, download: 'video.webm' }).show();
             $("#btnStartReco").show();
@@ -471,6 +521,46 @@ var WrtcHelper = (function () {
                 console.log(e);
             }
         }
+        else if(message.allowShareScreen){
+            console.log(message.allowShareScreen);
+            const other_id = message.allowShareScreen;
+            const shareButton = `
+            <button id="remoteStartStopScreenshare_${other_id}" class="btn function_btn"><i class="fas fa-desktop" title="Screen Share"></i></button>
+            `;
+            await $("#myControlls"+other_id).append(shareButton);
+        }
+        else if(message.removeShareScreen){
+            console.log(message.removeShareScreen);
+            const other_id = message.removeShareScreen;
+            await $("#myControlls"+other_id).empty();
+        }
+        
+        else if(message.muteAudio){
+            console.log(message.muteAudio);
+            const connid = message.muteAudio;
+            if (_remoteAudioStreams[connid]) {
+                _remoteAudioStreams[connid].getTracks().forEach(t => {
+                    if (t.stop)
+                        t.stop();
+                });
+                _remoteAudioStreams[connid] = null;
+            }
+        }
+
+        else if(message.unmuteAudio){
+            console.log(message.unmuteAudio);
+            const connid = message.unmuteAudio;
+            if (!_remoteAudioStreams[connid])
+            _remoteAudioStreams[connid] = new MediaStream();
+
+            var _remoteAudioPlayer = document.getElementById('a_' + connid)
+            var astream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            _audioTrack = astream.getAudioTracks()[0];
+            _remoteAudioStreams[connid].addTrack(_audioTrack);
+            _remoteAudioPlayer.srcObject = _audioTrack;
+            _remoteAudioPlayer.load();
+        }
+
     }
 
     function IsConnectionAvailable(connection) {
